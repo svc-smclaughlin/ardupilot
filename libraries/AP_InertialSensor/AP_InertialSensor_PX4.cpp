@@ -196,21 +196,29 @@ void AP_InertialSensor_PX4::_get_sample(void)
 {
     for (uint8_t i=0; i<_num_accel_instances; i++) {
         struct accel_report	accel_report;
+		int count = 0;
+		_accel_in[i].zero();
         while (_accel_fd[i] != -1 && 
                ::read(_accel_fd[i], &accel_report, sizeof(accel_report)) == sizeof(accel_report) &&
                accel_report.timestamp != _last_accel_timestamp[i]) {        
-            _accel_in[i] = Vector3f(accel_report.x, accel_report.y, accel_report.z);
+            _accel_in[i] += Vector3f(accel_report.x, accel_report.y, accel_report.z);
             _last_accel_timestamp[i] = accel_report.timestamp;
+			++count;
         }
+		if( count > 0 ) _accel_in[i] /= count;
     }
     for (uint8_t i=0; i<_num_gyro_instances; i++) {
         struct gyro_report	gyro_report;
+		int count = 0;
+		_gyro_in[i].zero();
         while (_gyro_fd[i] != -1 && 
                ::read(_gyro_fd[i], &gyro_report, sizeof(gyro_report)) == sizeof(gyro_report) &&
                gyro_report.timestamp != _last_gyro_timestamp[i]) {        
-            _gyro_in[i] = Vector3f(gyro_report.x, gyro_report.y, gyro_report.z);
+            _gyro_in[i] += Vector3f(gyro_report.x, gyro_report.y, gyro_report.z);
             _last_gyro_timestamp[i] = gyro_report.timestamp;
+			++count;
         }
+		if( count > 0 ) _gyro_in[i] /= count;
     }
     _last_get_sample_timestamp = hrt_absolute_time();
 }
@@ -264,9 +272,9 @@ uint8_t AP_InertialSensor_PX4::_get_primary_gyro(void) const
 
 uint8_t AP_InertialSensor_PX4::get_primary_accel(void) const 
 {
-    for (uint8_t i=0; i<_num_accel_instances; i++) {
+    for (uint8_t i=_num_accel_instances - 1; i>=0; --i) {
         if (get_accel_health(i)) return i;
-    }    
+    }
     return 0;
 }
 
