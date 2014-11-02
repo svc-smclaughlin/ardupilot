@@ -185,16 +185,21 @@ void ToshibaLED::update_colours(void)
 
     // solid green or flashing green if armed
     if (AP_Notify::flags.armed) {
-        // solid green if armed with GPS 3d lock
-        if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D) {
+        if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
+            // solid green
             _red_des = TOSHIBA_LED_OFF;
-            _blue_des = TOSHIBA_LED_OFF;
             _green_des = brightness;
-        }else{
-            // solid blue if armed with no GPS lock
+            _blue_des = TOSHIBA_LED_OFF;
+        }else if (AP_Notify::flags.gps_status == AP_GPS::GPS_OK_FIX_3D) {
+            // solid cyan
             _red_des = TOSHIBA_LED_OFF;
+            _green_des = brightness;
             _blue_des = brightness;
+        }else{
+            // solid blue
+            _red_des = TOSHIBA_LED_OFF;
             _green_des = TOSHIBA_LED_OFF;
+            _blue_des = brightness;
         }
         return;
     }else{
@@ -225,66 +230,39 @@ void ToshibaLED::update_colours(void)
         }else{
             // flashing green if disarmed with GPS 3d lock
             // flashing blue if disarmed with no gps lock
-            switch(step) {
+            switch(step)
+            {
                 case 0:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = brightness;
-                    }
-                    break;
                 case 1:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = TOSHIBA_LED_OFF;
-                    }
-                    break;
                 case 2:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = brightness;
-                    }
-                    break;
                 case 3:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = TOSHIBA_LED_OFF;
-                    }
-                    break;
                 case 4:
-                    _red_des = TOSHIBA_LED_OFF;
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D) {
-                        // flashing green if disarmed with GPS 3d lock
-                        _blue_des = TOSHIBA_LED_OFF;
+                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
+                        // flashing green
+                        _red_des = TOSHIBA_LED_OFF;
                         _green_des = brightness;
-                    }else{
-                        // flashing blue if disarmed with no gps lock
+                        _blue_des = TOSHIBA_LED_OFF;
+                    }else if (AP_Notify::flags.gps_status == AP_GPS::GPS_OK_FIX_3D) {
+                        // flashing cyan
+                        _red_des = TOSHIBA_LED_OFF;
+                        _green_des = brightness;
                         _blue_des = brightness;
+                    }else{
+                        // flashing blue
+                        _red_des = TOSHIBA_LED_OFF;
                         _green_des = TOSHIBA_LED_OFF;
+                        _blue_des = brightness;
                     }
                     break;
                 case 5:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = TOSHIBA_LED_OFF;
-                    }
-                    break;
-
                 case 6:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = brightness;
-                    }
-                    break;
-
                 case 7:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = TOSHIBA_LED_OFF;
-                    }
-                    break;
                 case 8:
-                    if (AP_Notify::flags.gps_status >= AP_GPS::GPS_OK_FIX_3D_DGPS) {
-                        _green_des = brightness;
-                    }
-                    break;
                 case 9:
                     // all off
                     _red_des = TOSHIBA_LED_OFF;
-                    _blue_des = TOSHIBA_LED_OFF;
                     _green_des = TOSHIBA_LED_OFF;
+                    _blue_des = TOSHIBA_LED_OFF;
                     break;
             }
         }

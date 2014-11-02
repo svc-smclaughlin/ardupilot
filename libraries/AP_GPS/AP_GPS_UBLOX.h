@@ -229,7 +229,8 @@ private:
         FIX_TIME = 5
     };
     enum ubx_nav_status_bits {
-        NAV_STATUS_FIX_VALID = 1
+        NAV_STATUS_FIX_VALID = 1,
+        NAV_STATUS_FIX_DGPS = 2
     };
 
     // Packet checksum accumulators
