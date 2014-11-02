@@ -89,16 +89,16 @@ AP_GPS_UBLOX::send_next_rate_update(void)
         _configure_navigation_rate(200);
         break;
     case 1:
-        _configure_message_rate(CLASS_NAV, MSG_POSLLH, 1); // 28+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_POSLLH, 1); // 28+8 bytes
         break;
     case 2:
-        _configure_message_rate(CLASS_NAV, MSG_STATUS, 1); // 16+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_STATUS, 1); // 16+8 bytes
         break;
     case 3:
-        _configure_message_rate(CLASS_NAV, MSG_SOL, 1);    // 52+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_SOL, 1);    // 52+8 bytes
         break;
     case 4:
-        _configure_message_rate(CLASS_NAV, MSG_VELNED, 1); // 36+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_VELNED, 1); // 36+8 bytes
         break;
 #if UBLOX_HW_LOGGING
     case 5:
@@ -110,6 +110,9 @@ AP_GPS_UBLOX::send_next_rate_update(void)
         _configure_message_rate(CLASS_MON, MSG_MON_HW2, 2); // 24+8 bytes
         break;
 #endif
+    case 7:
+        _configure_message_rate(CLASS_NAV, MSG_NAV_DOP, 1);    // 18+8 bytes
+        break;
     default:
         need_rate_update = false;
         rate_update_step = 0;
@@ -348,8 +351,8 @@ AP_GPS_UBLOX::_parse_gps(void)
     }
 
     switch (_msg_id) {
-    case MSG_POSLLH:
-        Debug("MSG_POSLLH next_fix=%u", next_fix);
+    case MSG_NAV_POSLLH:
+        Debug("MSG_NAV_POSLLH next_fix=%u", next_fix);
         _last_pos_time        = _buffer.posllh.time;
         state.location.lng    = _buffer.posllh.longitude;
         state.location.lat    = _buffer.posllh.latitude;
@@ -362,8 +365,8 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.location.alt = 58400;
 #endif
         break;
-    case MSG_STATUS:
-        Debug("MSG_STATUS fix_status=%u fix_type=%u",
+    case MSG_NAV_STATUS:
+        Debug("MSG_NAV_STATUS fix_status=%u fix_type=%u",
               _buffer.status.fix_status,
               _buffer.status.fix_type);
         if (_buffer.status.fix_status & NAV_STATUS_FIX_VALID) {
@@ -384,8 +387,12 @@ AP_GPS_UBLOX::_parse_gps(void)
         next_fix = state.status;
 #endif
         break;
-    case MSG_SOL:
-        Debug("MSG_SOL fix_status=%u fix_type=%u",
+    case MSG_NAV_DOP:
+        Debug("MSG_NAV_DOP");
+        state.hdop        = _buffer.dop.hdop;
+        break;
+    case MSG_NAV_SOL:
+        Debug("MSG_NAV_SOL fix_status=%u fix_type=%u",
               _buffer.solution.fix_status,
               _buffer.solution.fix_type);
         if (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) {
@@ -402,7 +409,6 @@ AP_GPS_UBLOX::_parse_gps(void)
             state.status = AP_GPS::NO_FIX;
         }
         state.num_sats    = _buffer.solution.satellites;
-        state.hdop        = _buffer.solution.position_DOP;
         if (next_fix >= AP_GPS::GPS_OK_FIX_2D) {
             state.last_gps_time_ms = hal.scheduler->millis();
             if (state.time_week == _buffer.solution.week &&
@@ -424,8 +430,8 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.last_gps_time_ms = hal.scheduler->millis();
 #endif
         break;
-    case MSG_VELNED:
-        Debug("MSG_VELNED");
+    case MSG_NAV_VELNED:
+        Debug("MSG_NAV_VELNED");
         _last_vel_time         = _buffer.velned.time;
         state.ground_speed     = _buffer.velned.speed_2d*0.01f;          // m/s
         state.ground_course_cd = _buffer.velned.heading_2d / 1000;       // Heading 2D deg * 100000 rescaled to deg * 100

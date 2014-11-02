@@ -105,6 +105,16 @@ private:
         uint32_t time_to_first_fix;
         uint32_t uptime;                                // milliseconds
     };
+    struct PACKED ubx_nav_dop {
+        uint32_t time;                                  // GPS msToW
+        int16_t gdop;
+        int16_t pdop;
+        int16_t tdop;
+        int16_t vdop;
+        int16_t hdop;
+        int16_t ndop;
+        int16_t edop;
+    };
     struct PACKED ubx_nav_solution {
         uint32_t time;
         int32_t time_nsec;
@@ -191,6 +201,7 @@ private:
     union PACKED {
         ubx_nav_posllh posllh;
         ubx_nav_status status;
+        ubx_nav_dop dop;
         ubx_nav_solution solution;
         ubx_nav_velned velned;
         ubx_cfg_nav_settings nav_settings;
@@ -209,10 +220,11 @@ private:
         CLASS_MON = 0x0A,
         MSG_ACK_NACK = 0x00,
         MSG_ACK_ACK = 0x01,
-        MSG_POSLLH = 0x2,
-        MSG_STATUS = 0x3,
-        MSG_SOL = 0x6,
-        MSG_VELNED = 0x12,
+        MSG_NAV_POSLLH = 0x2,
+        MSG_NAV_STATUS = 0x3,
+        MSG_NAV_DOP = 0x4,
+        MSG_NAV_SOL = 0x6,
+        MSG_NAV_VELNED = 0x12,
         MSG_CFG_PRT = 0x00,
         MSG_CFG_RATE = 0x08,
         MSG_CFG_SET_RATE = 0x01,
