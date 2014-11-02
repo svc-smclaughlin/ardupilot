@@ -982,6 +982,10 @@ void loop()
     // ---------------------
     fast_loop();
 
+    if (g.log_bitmask & MASK_LOG_IMU) {
+        DataFlash.Log_Write_IMU(ins);
+    }
+
     // tell the scheduler one tick has passed
     scheduler.tick();
 
@@ -1119,6 +1123,9 @@ static void ten_hz_logging_loop()
     if (should_log(MASK_LOG_NTUN) && (mode_requires_GPS(control_mode) || landing_with_GPS())) {
         Log_Write_Nav_Tuning();
     }
+    if (g.log_bitmask & MASK_LOG_CURRENT) {
+        Log_Write_Current();
+    }
 }
 
 // fifty_hz_logging_loop
@@ -1133,10 +1140,6 @@ static void fifty_hz_logging_loop()
 #if HIL_MODE == HIL_MODE_DISABLED
     if (should_log(MASK_LOG_ATTITUDE_FAST)) {
         Log_Write_Attitude();
-    }
-
-    if (should_log(MASK_LOG_IMU)) {
-        DataFlash.Log_Write_IMU(ins);
     }
 #endif
 }
@@ -1167,11 +1170,6 @@ static void one_hz_loop()
 {
     if (should_log(MASK_LOG_ANY)) {
         Log_Write_Data(DATA_AP_STATE, ap.value);
-    }
-
-    // log battery info to the dataflash
-    if (should_log(MASK_LOG_CURRENT)) {
-        Log_Write_Current();
     }
 
     // perform pre-arm checks & display failures every 30 seconds
