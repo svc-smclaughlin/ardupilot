@@ -424,7 +424,7 @@ struct PACKED log_UbxS {
 struct PACKED log_UbxP {
     LOG_PACKET_HEADER;
     uint32_t tow_ms;
-    float pr[12];
+    double pr[12];
 };
 
 struct PACKED log_UbxD {
@@ -436,7 +436,7 @@ struct PACKED log_UbxD {
 struct PACKED log_UbxC {
     LOG_PACKET_HEADER;
     uint32_t tow_ms;
-    float cp[12];
+    double cp[12];
 };
 
 struct PACKED log_UbxQ {
@@ -514,11 +514,11 @@ struct PACKED log_UbxN {
     { LOG_UBXS_MSG, sizeof(log_UbxS), \
       "UBXS", "IBBBBBBBBBBBB", "TOW,sv1,sv2,sv3,sv4,sv5,sv6,sv7,sv8,sv9,sv10,sv11,sv12" }, \
     { LOG_UBXP_MSG, sizeof(log_UbxP), \
-      "UBXP", "Iffffffffffff", "TOW,pr1,pr2,pr3,pr4,pr5,pr6,pr7,pr8,pr9,pr10,pr11,pr12" }, \
+      "UBXP", "Idddddddddddd", "TOW,pr1,pr2,pr3,pr4,pr5,pr6,pr7,pr8,pr9,pr10,pr11,pr12" }, \
     { LOG_UBXD_MSG, sizeof(log_UbxD), \
       "UBXD", "Iffffffffffff", "TOW,dp1,dp2,dp3,dp4,dp5,dp6,dp7,dp8,dp9,dp10,dp11,dp12" }, \
     { LOG_UBXC_MSG, sizeof(log_UbxC), \
-      "UBXC", "Iffffffffffff", "TOW,cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12" }, \
+      "UBXC", "Idddddddddddd", "TOW,cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12" }, \
     { LOG_UBXQ_MSG, sizeof(log_UbxQ), \
       "UBXQ", "Ibbbbbbbbbbbb", "TOW,qi1,qi2,qi3,qi4,qi5,qi6,qi7,qi8,qi9,qi10,qi11,qi12" }, \
     { LOG_UBXZ_MSG, sizeof(log_UbxZ), \
