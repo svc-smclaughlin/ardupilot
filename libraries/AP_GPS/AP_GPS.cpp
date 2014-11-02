@@ -71,17 +71,17 @@ const AP_Param::GroupInfo AP_GPS::var_info[] PROGMEM = {
 void AP_GPS::init(DataFlash_Class *dataflash)
 {
     _DataFlash = dataflash;
-    hal.uartB->begin(38400UL, 256, 16);
+    hal.uartB->begin(115200UL, 256, 16);
     primary_instance = 0;
 #if GPS_MAX_INSTANCES > 1
     if (hal.uartE != NULL) {
-        hal.uartE->begin(38400UL, 256, 16);        
+        hal.uartE->begin(115200UL, 256, 16);        
     }
 #endif
 }
 
 // baudrates to try to detect GPSes with
-const uint32_t AP_GPS::_baudrates[] PROGMEM = {4800U, 38400U, 115200U, 57600U, 9600U};
+const uint32_t AP_GPS::_baudrates[] PROGMEM = {115200U, 38400U, 4800U, 57600U, 9600U};
 
 // initialisation blobs to send to the GPS to try to get it into the
 // right mode
