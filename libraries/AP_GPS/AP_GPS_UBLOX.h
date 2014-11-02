@@ -134,6 +134,30 @@ private:
         uint8_t satellites;
         uint32_t res2;
     };
+	struct PACKED ubx_rxm_raw_repeat
+	{
+		double		cpMes;		// Carrier phase measurement, L1 cycles
+		double 		prMes;		// Pseudorange measurement, m
+		float 		doMes;		// Doppler measurement, Hz
+		uint8_t		sv;			// Space Vehicle Number
+		int8_t		mesQI; 		// Nav Measurements Quality Indicator: >=4 : PR+DO OK, >=5 : PR+DO+CP OK, <6 : likely loss of carrier lock in previous interval
+		int8_t		cn0;		// Signal strength C/N0, db-Hz
+		uint8_t		lli;		// Loss of lock indicator (RINEX definition)
+	};
+	struct PACKED ubx_rxm_raw
+	{
+		uint32_t	iTOW;		// Measurement integer millisecond GPS time of week
+		uint16_t	week;		// Measurement GPS week number
+		uint8_t		numSV;		// # of satellites following
+		uint8_t		reserved;
+		ubx_rxm_raw_repeat svRaw[16]; // Repeated data (up to 16 SVs for UBlox 6T)
+	};
+	struct PACKED ubx_rxm_sfrb
+	{
+		uint8_t		chn;		// channel number
+		uint8_t		svid;		// ID of satellite transmitting subframe
+		uint32_t	dwrd[10];	// words of data
+	};
     struct PACKED ubx_nav_velned {
         uint32_t time;                                  // GPS msToW
         int32_t ned_north;
@@ -204,6 +228,8 @@ private:
         ubx_nav_dop dop;
         ubx_nav_solution solution;
         ubx_nav_velned velned;
+        ubx_rxm_raw raw;
+        ubx_rxm_sfrb sfrb;
         ubx_cfg_nav_settings nav_settings;
         ubx_mon_hw_60 mon_hw_60;
         ubx_mon_hw_68 mon_hw_68;
@@ -215,6 +241,7 @@ private:
         PREAMBLE1 = 0xb5,
         PREAMBLE2 = 0x62,
         CLASS_NAV = 0x01,
+        CLASS_RXM = 0x02,
         CLASS_ACK = 0x05,
         CLASS_CFG = 0x06,
         CLASS_MON = 0x0A,
@@ -225,6 +252,8 @@ private:
         MSG_NAV_DOP = 0x4,
         MSG_NAV_SOL = 0x6,
         MSG_NAV_VELNED = 0x12,
+        MSG_RXM_RAW = 0x10,
+        MSG_RXM_SFRB = 0x11,
         MSG_CFG_PRT = 0x00,
         MSG_CFG_RATE = 0x08,
         MSG_CFG_SET_RATE = 0x01,
@@ -292,6 +321,8 @@ private:
     void write_logging_headers(void);
     void log_mon_hw(void);
     void log_mon_hw2(void);
+    void log_raw(void);
+    void log_subframe(void);
 };
 
 #endif // __AP_GPS_UBLOX_H__

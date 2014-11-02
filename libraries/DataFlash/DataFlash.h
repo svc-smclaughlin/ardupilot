@@ -415,6 +415,49 @@ struct PACKED log_Ubx2 {
     uint8_t  magQ;
 };
 
+struct PACKED log_UbxS {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    uint8_t sv[12];
+};
+
+struct PACKED log_UbxP {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    float pr[12];
+};
+
+struct PACKED log_UbxD {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    float dp[12];
+};
+
+struct PACKED log_UbxC {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    float cp[12];
+};
+
+struct PACKED log_UbxQ {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    int8_t qi[12];
+};
+
+struct PACKED log_UbxZ {
+    LOG_PACKET_HEADER;
+    uint32_t tow_ms;
+    int8_t cn0[12];
+};
+
+struct PACKED log_UbxN {
+    LOG_PACKET_HEADER;
+    uint8_t chn;
+    uint8_t svid;
+    uint32_t dwrd[10];
+};
+
 // messages for all boards
 #define LOG_BASE_STRUCTURES \
     { LOG_FORMAT_MSG, sizeof(log_Format), \
@@ -467,7 +510,21 @@ struct PACKED log_Ubx2 {
     { LOG_UBX1_MSG, sizeof(log_Ubx1), \
       "UBX1", "IBHBB",  "TimeMS,Instance,noisePerMS,jamInd,aPower" }, \
     { LOG_UBX2_MSG, sizeof(log_Ubx2), \
-      "UBX2", "IBbBbB", "TimeMS,Instance,ofsI,magI,ofsQ,magQ" }
+      "UBX2", "IBbBbB", "TimeMS,Instance,ofsI,magI,ofsQ,magQ" }, \
+    { LOG_UBXS_MSG, sizeof(log_UbxS), \
+      "UBXS", "IBBBBBBBBBBBB", "TOW,sv1,sv2,sv3,sv4,sv5,sv6,sv7,sv8,sv9,sv10,sv11,sv12" }, \
+    { LOG_UBXP_MSG, sizeof(log_UbxP), \
+      "UBXP", "Iffffffffffff", "TOW,pr1,pr2,pr3,pr4,pr5,pr6,pr7,pr8,pr9,pr10,pr11,pr12" }, \
+    { LOG_UBXD_MSG, sizeof(log_UbxD), \
+      "UBXD", "Iffffffffffff", "TOW,dp1,dp2,dp3,dp4,dp5,dp6,dp7,dp8,dp9,dp10,dp11,dp12" }, \
+    { LOG_UBXC_MSG, sizeof(log_UbxC), \
+      "UBXC", "Iffffffffffff", "TOW,cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12" }, \
+    { LOG_UBXQ_MSG, sizeof(log_UbxQ), \
+      "UBXQ", "Ibbbbbbbbbbbb", "TOW,qi1,qi2,qi3,qi4,qi5,qi6,qi7,qi8,qi9,qi10,qi11,qi12" }, \
+    { LOG_UBXZ_MSG, sizeof(log_UbxZ), \
+      "UBXZ", "Ibbbbbbbbbbbb", "TOW,cn1,cn2,cn3,cn4,cn5,cn6,cn7,cn8,cn9,cn10,cn11,cn12" }, \
+    { LOG_UBXN_MSG, sizeof(log_UbxN), \
+      "UBXN", "BBIIIIIIIIII", "ch,sv,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10" }
 
 #if HAL_CPU_CLASS >= HAL_CPU_CLASS_75
 #define LOG_COMMON_STRUCTURES LOG_BASE_STRUCTURES, LOG_EXTRA_STRUCTURES
@@ -503,6 +560,13 @@ struct PACKED log_Ubx2 {
 #define LOG_TERRAIN_MSG   150
 #define LOG_UBX1_MSG      151
 #define LOG_UBX2_MSG      152
+#define LOG_UBXS_MSG      153
+#define LOG_UBXP_MSG      154
+#define LOG_UBXD_MSG      155
+#define LOG_UBXC_MSG      156
+#define LOG_UBXQ_MSG      157
+#define LOG_UBXZ_MSG      158
+#define LOG_UBXN_MSG      159
 
 // message types 200 to 210 reversed for GPS driver use
 // message types 211 to 220 reversed for autotune use
