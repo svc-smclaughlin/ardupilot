@@ -41,7 +41,7 @@ void ToshibaLED::set_rgb(uint8_t red, uint8_t green, uint8_t blue)
         green != _green_curr ||
         blue != _blue_curr) {
         // call the hardware update routine
-        if (hw_set_rgb(red, green, blue)) {
+        if (hw_set_rgb(blue, red, green)) {
             _red_curr = red;
             _green_curr = green;
             _blue_curr = blue;
