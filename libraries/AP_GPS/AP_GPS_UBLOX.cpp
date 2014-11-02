@@ -89,16 +89,16 @@ AP_GPS_UBLOX::send_next_rate_update(void)
         _configure_navigation_rate(200);
         break;
     case 1:
-        _configure_message_rate(CLASS_NAV, MSG_POSLLH, 1); // 28+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_POSLLH, 1); // 28+8 bytes
         break;
     case 2:
-        _configure_message_rate(CLASS_NAV, MSG_STATUS, 1); // 16+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_STATUS, 1); // 16+8 bytes
         break;
     case 3:
-        _configure_message_rate(CLASS_NAV, MSG_SOL, 1);    // 52+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_SOL, 1);    // 52+8 bytes
         break;
     case 4:
-        _configure_message_rate(CLASS_NAV, MSG_VELNED, 1); // 36+8 bytes
+        _configure_message_rate(CLASS_NAV, MSG_NAV_VELNED, 1); // 36+8 bytes
         break;
 #if UBLOX_HW_LOGGING
     case 5:
@@ -110,6 +110,12 @@ AP_GPS_UBLOX::send_next_rate_update(void)
         _configure_message_rate(CLASS_MON, MSG_MON_HW2, 2); // 24+8 bytes
         break;
 #endif
+    case 7:
+        _configure_message_rate(CLASS_RXM, MSG_RXM_RAW, 1);    // 8+16*24+8 bytes
+        break;
+    case 8:
+        _configure_message_rate(CLASS_RXM, MSG_RXM_SFRB, 1);    // 42+8 bytes
+        break;
     default:
         need_rate_update = false;
         rate_update_step = 0;
@@ -238,6 +244,7 @@ AP_GPS_UBLOX::read(void)
 
             if (_parse_gps()) {
                 parsed = true;
+                memset(_buffer.bytes, 0, sizeof(_buffer));
             }
         }
     }
@@ -286,6 +293,75 @@ void AP_GPS_UBLOX::log_mon_hw2(void)
     gps._DataFlash->WriteBlock(&pkt, sizeof(pkt));    
 }
 #endif // UBLOX_HW_LOGGING
+
+void AP_GPS_UBLOX::log_raw(void)
+{
+    if (gps._DataFlash == NULL || !gps._DataFlash->logging_started()) {
+        return;
+    }
+
+    struct log_UbxS pktS= {
+        LOG_PACKET_HEADER_INIT(LOG_UBXS_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+    struct log_UbxP pktP = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXP_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+    struct log_UbxD pktD = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXD_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+    struct log_UbxC pktC = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXC_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+    struct log_UbxQ pktQ = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXQ_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+    struct log_UbxZ pktZ = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXZ_MSG),
+        tow_ms : _buffer.raw.iTOW
+    };
+
+    for(int i=0; i<12; ++i)
+    {
+        pktS.sv[i] = _buffer.raw.svRaw[i].sv;
+        pktP.pr[i] = _buffer.raw.svRaw[i].prMes;
+        pktD.dp[i] = _buffer.raw.svRaw[i].doMes;
+        pktC.cp[i] = _buffer.raw.svRaw[i].cpMes;
+        pktQ.qi[i] = _buffer.raw.svRaw[i].mesQI;
+        pktZ.cn0[i] = _buffer.raw.svRaw[i].cn0;
+    }
+
+    gps._DataFlash->WriteBlock(&pktS, sizeof(pktS));
+    gps._DataFlash->WriteBlock(&pktP, sizeof(pktP));
+    gps._DataFlash->WriteBlock(&pktD, sizeof(pktD));
+    gps._DataFlash->WriteBlock(&pktC, sizeof(pktC));
+    gps._DataFlash->WriteBlock(&pktQ, sizeof(pktQ));
+    gps._DataFlash->WriteBlock(&pktZ, sizeof(pktZ));
+}
+
+void AP_GPS_UBLOX::log_subframe(void)
+{
+    if (gps._DataFlash == NULL || !gps._DataFlash->logging_started()) {
+        return;
+    }
+
+    struct log_UbxN pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_UBXN_MSG),
+        chn : _buffer.sfrb.chn,
+        svid : _buffer.sfrb.svid
+    };
+
+	for(int i=0; i<10; ++i)
+	{
+		pkt.dwrd[i] = _buffer.sfrb.dwrd[i];
+	}
+
+    gps._DataFlash->WriteBlock(&pkt, sizeof(pkt));
+}
 
 void AP_GPS_UBLOX::unexpected_message(void)
 {
@@ -342,14 +418,14 @@ AP_GPS_UBLOX::_parse_gps(void)
     }
 #endif // UBLOX_HW_LOGGING
 
-    if (_class != CLASS_NAV) {
+    if ( !(_class == CLASS_NAV || _class == CLASS_RXM) ) {
         unexpected_message();
         return false;
     }
 
     switch (_msg_id) {
-    case MSG_POSLLH:
-        Debug("MSG_POSLLH next_fix=%u", next_fix);
+    case MSG_NAV_POSLLH:
+        Debug("MSG_NAV_POSLLH next_fix=%u", next_fix);
         _last_pos_time        = _buffer.posllh.time;
         state.location.lng    = _buffer.posllh.longitude;
         state.location.lat    = _buffer.posllh.latitude;
@@ -362,8 +438,8 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.location.alt = 58400;
 #endif
         break;
-    case MSG_STATUS:
-        Debug("MSG_STATUS fix_status=%u fix_type=%u",
+    case MSG_NAV_STATUS:
+        Debug("MSG_NAV_STATUS fix_status=%u fix_type=%u",
               _buffer.status.fix_status,
               _buffer.status.fix_type);
         if (_buffer.status.fix_status & NAV_STATUS_FIX_VALID) {
@@ -384,8 +460,8 @@ AP_GPS_UBLOX::_parse_gps(void)
         next_fix = state.status;
 #endif
         break;
-    case MSG_SOL:
-        Debug("MSG_SOL fix_status=%u fix_type=%u",
+    case MSG_NAV_SOL:
+        Debug("MSG_NAV_SOL fix_status=%u fix_type=%u",
               _buffer.solution.fix_status,
               _buffer.solution.fix_type);
         if (_buffer.solution.fix_status & NAV_STATUS_FIX_VALID) {
@@ -424,8 +500,8 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.last_gps_time_ms = hal.scheduler->millis();
 #endif
         break;
-    case MSG_VELNED:
-        Debug("MSG_VELNED");
+    case MSG_NAV_VELNED:
+        Debug("MSG_NAV_VELNED");
         _last_vel_time         = _buffer.velned.time;
         state.ground_speed     = _buffer.velned.speed_2d*0.01f;          // m/s
         state.ground_course_cd = _buffer.velned.heading_2d / 1000;       // Heading 2D deg * 100000 rescaled to deg * 100
@@ -434,6 +510,10 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.velocity.y = _buffer.velned.ned_east * 0.01f;
         state.velocity.z = _buffer.velned.ned_down * 0.01f;
         _new_speed = true;
+        break;
+    case MSG_RXM_SFRB:
+        Debug("MSG_RXM_SFRB");
+        log_subframe();
         break;
     default:
         Debug("Unexpected NAV message 0x%02x", (unsigned)_msg_id);
