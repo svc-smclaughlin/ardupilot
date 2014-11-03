@@ -517,6 +517,10 @@ AP_GPS_UBLOX::_parse_gps(void)
         state.velocity.z = _buffer.velned.ned_down * 0.01f;
         _new_speed = true;
         break;
+    case MSG_RXM_RAW:
+        Debug("MSG_RXM_RAW");
+        log_raw();
+        break;
     case MSG_RXM_SFRB:
         Debug("MSG_RXM_SFRB");
         log_subframe();
